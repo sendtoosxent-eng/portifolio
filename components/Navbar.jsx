@@ -1,103 +1,725 @@
-'use client'
-import { useEffect, useRef } from 'react'
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function Navbar() {
-    const sideMenuRef = useRef();
-    const navRef = useRef();
-    const navLinkRef = useRef();
+    const [scrolled, setScrolled] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [darkMode, setDarkMode] = useState(false);
+    const [activeSection, setActiveSection] = useState("home");
 
-    const openMenu = () => {
-        sideMenuRef.current.style.transform = 'translateX(-16rem)';
-    }
-    const closeMenu = () => {
-        sideMenuRef.current.style.transform = 'translateX(16rem)';
-    }
-    const toggleTheme = () => {
+    const navItems = [
+        { name: "Home", href: "#home", id: "home" },
+        { name: "About", href: "#about", id: "about" },
+        { name: "Services", href: "#services", id: "services" },
+        { name: "Projects", href: "#work", id: "work" },
+        { name: "Contact", href: "#contact", id: "contact" },
+    ];
 
-        document.documentElement.classList.toggle('dark');
-
-        if (document.documentElement.classList.contains('dark')) {
-            localStorage.theme = 'dark';
-        } else {
-            localStorage.theme = 'light';
-        }
-    }
-
+    // --------------------------------------------------
+    // Scroll detection
+    // --------------------------------------------------
     useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 50);
+        };
 
-        window.addEventListener('scroll', () => {
-            if (scrollY > 50) {
-                navRef.current.classList.add('bg-white', 'bg-opacity-50', 'backdrop-blur-lg', 'shadow-sm', 'dark:bg-darkTheme', 'dark:shadow-white/20');
-                navLinkRef.current.classList.remove('bg-white', 'shadow-sm', 'bg-opacity-50', 'dark:border', 'dark:border-white/30', "dark:bg-transparent");
-            } else {
-                navRef.current.classList.remove('bg-white', 'bg-opacity-50', 'backdrop-blur-lg', 'shadow-sm', 'dark:bg-darkTheme', 'dark:shadow-white/20');
-                navLinkRef.current.classList.add('bg-white', 'shadow-sm', 'bg-opacity-50', 'dark:border', 'dark:border-white/30', "dark:bg-transparent");
-            }
-        })
+        handleScroll();
 
-        // -------- light mode and dark mode -----------
+        window.addEventListener("scroll", handleScroll);
 
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
+    // --------------------------------------------------
+    // Dark mode
+    // --------------------------------------------------
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("theme");
+
+        const prefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches;
+
+        const shouldUseDark =
+            savedTheme === "dark" ||
+            (!savedTheme && prefersDark);
+
+        if (shouldUseDark) {
+            document.documentElement.classList.add("dark");
+            setDarkMode(true);
         } else {
-            document.documentElement.classList.remove('dark')
+            document.documentElement.classList.remove("dark");
+            setDarkMode(false);
         }
-    }, [])
+    }, []);
+
+    const toggleTheme = () => {
+        const isDark =
+            document.documentElement.classList.contains("dark");
+
+        if (isDark) {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+            setDarkMode(false);
+        } else {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+            setDarkMode(true);
+        }
+    };
+
+    // --------------------------------------------------
+    // Detect active section
+    // --------------------------------------------------
+    useEffect(() => {
+        const sections = navItems
+            .map((item) => document.getElementById(item.id))
+            .filter(Boolean);
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visibleSection = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort(
+                        (a, b) =>
+                            b.intersectionRatio -
+                            a.intersectionRatio
+                    )[0];
+
+                if (visibleSection) {
+                    setActiveSection(visibleSection.target.id);
+                }
+            },
+            {
+                rootMargin: "-20% 0px -60% 0px",
+                threshold: [0.1, 0.25, 0.5],
+            }
+        );
+
+        sections.forEach((section) => {
+            observer.observe(section);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    // --------------------------------------------------
+    // Close mobile menu
+    // --------------------------------------------------
+    const closeMenu = () => {
+        setMenuOpen(false);
+    };
 
     return (
         <>
-            <div className="fixed top-0 right-0 w-11/12 -z-10 translate-y-[-80%] dark:hidden">
-                <img src="/assets/header-bg-color.png" alt="" className="w-full" />
-            </div>
+            {/* ==================================================
+                FLOATING NAVBAR
+            ================================================== */}
+            <motion.nav
+                initial={{
+                    opacity: 0,
+                    y: -30,
+                }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                }}
+                transition={{
+                    duration: 0.7,
+                    ease: [0.22, 1, 0.36, 1],
+                }}
+                className="fixed top-4 left-0 right-0 mx-auto z-[100] w-[92%] max-w-[1150px]"
+            >
+                <motion.div
+                    animate={{
+                        scale: scrolled ? 0.97 : 1,
+                    }}
+                    transition={{
+                        duration: 0.35,
+                        ease: "easeOut",
+                    }}
+                    className={`
+                        w-full
+                        flex items-center justify-between
+                        px-4 sm:px-5 lg:px-6
+                        py-3
+                        rounded-full
+                        border
+                        backdrop-blur-xl
+                        transition-all duration-500
+                        ${
+                            scrolled
+                                ? `
+                                    bg-white/90
+                                    dark:bg-[#0B1F3A]
+                                    border-gray-200/70
+                                    dark:border-white/10
+                                    shadow-xl
+                                `
+                                : `
+                                    bg-white/70
+                                    dark:bg-[#0B1F3A]
+                                    border-gray-200/50
+                                    dark:border-white/10
+                                    shadow-lg
+                                `
+                        }
+                    `}
+                >
+                    {/* ==================================================
+                        LOGO / BRAND
+                    ================================================== */}
+                    <motion.a
+                        href="#home"
+                        onClick={closeMenu}
+                        whileHover={{
+                            scale: 1.05,
+                        }}
+                        whileTap={{
+                            scale: 0.95,
+                        }}
+                        className="flex items-center gap-2 shrink-0"
+                    >
+                        <div className="relative">
+                            {/* Yellow logo */}
+                            <motion.div
+                                whileHover={{
+                                    rotate: 5,
+                                }}
+                                className="
+                                    w-9 h-9
+                                    rounded-full
+                                    bg-[#F5C542]
+                                    text-[#0B1F3A]
+                                    flex items-center justify-center
+                                    font-bold
+                                    text-sm
+                                    shadow-md
+                                    shadow-[#F5C542]/20
+                                "
+                            >
+                                OS
+                            </motion.div>
 
-            <nav ref={navRef} className="w-full fixed px-5 lg:px-8 xl:px-[8%] py-4 flex items-center justify-between z-50">
+                            {/* Online indicator */}
+                            <motion.span
+                                className="
+                                    absolute
+                                    -right-0.5
+                                    -bottom-0.5
+                                    w-2.5
+                                    h-2.5
+                                    rounded-full
+                                    bg-green-500
+                                    border-2
+                                    border-white
+                                    dark:border-[#0B1F3A]
+                                "
+                                animate={{
+                                    scale: [1, 1.15, 1],
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                }}
+                            />
+                        </div>
 
-                <a href="https://prebuiltui.com?utm_source=elianaggg">
-                    <img src="/assets/logo-light.png" alt="Logo" className="w-28 cursor-pointer mr-14 dark:hidden" />
-                    <img src="/assets/logo-dark.png" alt="Logo" className="w-28 cursor-pointer mr-14 hidden dark:block" />
-                </a>
+                        <div className="hidden sm:block leading-tight">
+                            <p className="font-semibold text-sm text-gray-800 dark:text-white">
+                                Oscar Musisi
+                            </p>
 
-                <ul ref={navLinkRef} className="hidden md:flex items-center gap-6 lg:gap-8 rounded-full px-12 py-3 bg-white shadow-sm bg-opacity-50 font-Ovo dark:border dark:border-white/30 dark:bg-transparent ">
-                    <li><a className='hover:text-gray-500 dark:hover:text-gray-300 transition' href="#top">Home</a></li>
-                    <li><a className='hover:text-gray-500 dark:hover:text-gray-300 transition' href="#about">About me</a></li>
-                    <li><a className='hover:text-gray-500 dark:hover:text-gray-300 transition' href="#services">Services</a></li>
-                    <li><a className='hover:text-gray-500 dark:hover:text-gray-300 transition' href="#work">My Work</a></li>
-                    <li><a className='hover:text-gray-500 dark:hover:text-gray-300 transition' href="#contact">Contact me</a></li>
-                </ul>
+                            <p className="text-[10px] text-gray-500 dark:text-white/50">
+                                Software Engineer
+                            </p>
+                        </div>
+                    </motion.a>
 
-                <div className="flex items-center gap-4">
-                    <button onClick={toggleTheme}>
-                        <img src="/assets/moon_icon.png" alt="" className="w-5 dark:hidden" />
-                        <img src="/assets/sun_icon.png" alt="" className="w-5 hidden dark:block" />
-                    </button>
+                    {/* ==================================================
+                        DESKTOP NAVIGATION
+                    ================================================== */}
+                    <div className="hidden md:flex items-center">
+                        <ul className="flex items-center gap-1">
+                            {navItems.map((item) => {
+                                const isActive =
+                                    activeSection === item.id;
 
-                    <a href="#contact" className="hidden lg:flex items-center gap-3 px-8 py-1.5 border border-gray-300 hover:bg-slate-100/70 dark:hover:bg-darkHover rounded-full ml-4 font-Ovo dark:border-white/30">
-                        Contact
-                        <img src="/assets/arrow-icon.png" alt="" className="w-3 dark:hidden" />
-                        <img src="/assets/arrow-icon-dark.png" alt="" className="w-3 hidden dark:block" />
-                    </a>
+                                return (
+                                    <li
+                                        key={item.id}
+                                        className="relative"
+                                    >
+                                        <a
+                                            href={item.href}
+                                            className="
+                                                relative
+                                                block
+                                                px-4
+                                                py-2
+                                                text-sm
+                                                font-medium
+                                                font-Ovo
+                                                text-gray-600
+                                                dark:text-white/70
+                                                hover:text-gray-900
+                                                dark:hover:text-white
+                                                transition-colors
+                                                duration-300
+                                            "
+                                        >
+                                            {isActive && (
+                                                <motion.span
+                                                    layoutId="activeNav"
+                                                    className="
+                                                        absolute
+                                                        inset-0
+                                                        rounded-full
+                                                        bg-gray-100
+                                                        dark:bg-[#162E4D]
+                                                    "
+                                                    transition={{
+                                                        type: "spring",
+                                                        stiffness: 400,
+                                                        damping: 30,
+                                                    }}
+                                                />
+                                            )}
 
-                    <button className="block md:hidden ml-3" onClick={openMenu}>
-                        <img src="/assets/menu-black.png" alt="" className="w-6 dark:hidden" />
-                        <img src="/assets/menu-white.png" alt="" className="w-6 hidden dark:block" />
-                    </button>
-
-                </div>
-                {/* -- ----- mobile menu ------  -- */}
-                <ul ref={sideMenuRef} className="flex md:hidden flex-col gap-4 py-20 px-10 fixed -right-64 top-0 bottom-0 w-64 z-50 h-screen bg-rose-50 transition duration-500 font-Ovo dark:bg-darkHover dark:text-white">
-
-                    <div className="absolute right-6 top-6" onClick={closeMenu}>
-                        <img src="/assets/close-black.png" alt="" className="w-5 cursor-pointer dark:hidden" />
-                        <img src="/assets/close-white.png" alt="" className="w-5 cursor-pointer hidden dark:block" />
+                                            <span
+                                                className={`
+                                                    relative
+                                                    z-10
+                                                    transition-colors
+                                                    duration-300
+                                                    ${
+                                                        isActive
+                                                            ? "dark:text-[#F5C542]"
+                                                            : ""
+                                                    }
+                                                `}
+                                            >
+                                                {item.name}
+                                            </span>
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
 
-                    <li><a href="#top" onClick={closeMenu}>Home</a></li>
-                    <li><a href="#about" onClick={closeMenu}>About me</a></li>
-                    <li><a href="#services" onClick={closeMenu}>Services</a></li>
-                    <li><a href="#work" onClick={closeMenu}>My Work</a></li>
-                    <li><a href="#contact" onClick={closeMenu}>Contact me</a></li>
-                </ul>
-            </nav>
+                    {/* ==================================================
+                        RIGHT CONTROLS
+                    ================================================== */}
+                    <div className="flex items-center gap-2">
+
+                        {/* Theme toggle */}
+                        <motion.button
+                            onClick={toggleTheme}
+                            whileHover={{
+                                scale: 1.1,
+                                rotate: 8,
+                            }}
+                            whileTap={{
+                                scale: 0.9,
+                            }}
+                            className="
+                                w-9 h-9
+                                rounded-full
+                                flex items-center justify-center
+                                hover:bg-gray-100
+                                dark:hover:bg-[#162E4D]
+                                transition-colors
+                            "
+                            aria-label="Toggle theme"
+                        >
+                            <AnimatePresence mode="wait">
+                                {darkMode ? (
+                                    <motion.img
+                                        key="sun"
+                                        src="/assets/sun_icon.png"
+                                        alt="Light mode"
+                                        className="w-5"
+                                        initial={{
+                                            opacity: 0,
+                                            rotate: -90,
+                                            scale: 0.5,
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            rotate: 0,
+                                            scale: 1,
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            rotate: 90,
+                                            scale: 0.5,
+                                        }}
+                                        transition={{
+                                            duration: 0.2,
+                                        }}
+                                    />
+                                ) : (
+                                    <motion.img
+                                        key="moon"
+                                        src="/assets/moon_icon.png"
+                                        alt="Dark mode"
+                                        className="w-5"
+                                        initial={{
+                                            opacity: 0,
+                                            rotate: 90,
+                                            scale: 0.5,
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            rotate: 0,
+                                            scale: 1,
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            rotate: -90,
+                                            scale: 0.5,
+                                        }}
+                                        transition={{
+                                            duration: 0.2,
+                                        }}
+                                    />
+                                )}
+                            </AnimatePresence>
+                        </motion.button>
+
+                        {/* ==================================================
+                            DESKTOP CONTACT BUTTON
+                        ================================================== */}
+                        <motion.a
+                            href="#contact"
+                            whileHover={{
+                                scale: 1.04,
+                                y: -2,
+                            }}
+                            whileTap={{
+                                scale: 0.96,
+                            }}
+                            className="
+                                hidden lg:flex
+                                items-center
+                                gap-2
+                                px-5
+                                py-2
+                                rounded-full
+                                bg-[#F5C542]
+                                hover:bg-[#FFD95A]
+                                text-[#0B1F3A]
+                                text-sm
+                                font-semibold
+                                shadow-md
+                                shadow-[#F5C542]/20
+                                transition-colors
+                                duration-300
+                            "
+                        >
+                            Let's Talk
+
+                            <motion.span
+                                animate={{
+                                    x: [0, 3, 0],
+                                }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    repeatDelay: 2,
+                                }}
+                            >
+                                →
+                            </motion.span>
+                        </motion.a>
+
+                        {/* ==================================================
+                            MOBILE MENU BUTTON
+                        ================================================== */}
+                        <motion.button
+                            onClick={() =>
+                                setMenuOpen(!menuOpen)
+                            }
+                            whileTap={{
+                                scale: 0.9,
+                            }}
+                            className="
+                                md:hidden
+                                w-9 h-9
+                                rounded-full
+                                flex items-center justify-center
+                                hover:bg-gray-100
+                                dark:hover:bg-[#162E4D]
+                                transition-colors
+                            "
+                            aria-label={
+                                menuOpen
+                                    ? "Close menu"
+                                    : "Open menu"
+                            }
+                        >
+                            <AnimatePresence mode="wait">
+                                {menuOpen ? (
+                                    <motion.span
+                                        key="close"
+                                        initial={{
+                                            opacity: 0,
+                                            rotate: -90,
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            rotate: 0,
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            rotate: 90,
+                                        }}
+                                        className="
+                                            text-xl
+                                            text-gray-700
+                                            dark:text-white
+                                        "
+                                    >
+                                        ×
+                                    </motion.span>
+                                ) : (
+                                    <motion.span
+                                        key="menu"
+                                        initial={{
+                                            opacity: 0,
+                                            rotate: 90,
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            rotate: 0,
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            rotate: -90,
+                                        }}
+                                        className="
+                                            text-xl
+                                            text-gray-700
+                                            dark:text-white
+                                        "
+                                    >
+                                        ☰
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
+                        </motion.button>
+                    </div>
+                </motion.div>
+            </motion.nav>
+
+            {/* ==================================================
+                MOBILE MENU BACKDROP
+            ================================================== */}
+            <AnimatePresence>
+                {menuOpen && (
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                        }}
+                        animate={{
+                            opacity: 1,
+                        }}
+                        exit={{
+                            opacity: 0,
+                        }}
+                        onClick={closeMenu}
+                        className="
+                            fixed
+                            inset-0
+                            bg-black/20
+                            dark:bg-[#061426]/70
+                            backdrop-blur-sm
+                            z-[90]
+                            md:hidden
+                        "
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ==================================================
+                MOBILE MENU
+            ================================================== */}
+            <AnimatePresence>
+                {menuOpen && (
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            y: -20,
+                            scale: 0.95,
+                        }}
+                        animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                        }}
+                        exit={{
+                            opacity: 0,
+                            y: -20,
+                            scale: 0.95,
+                        }}
+                        transition={{
+                            duration: 0.3,
+                            ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="
+                            fixed
+                            top-20
+                            left-4
+                            right-4
+                            z-[95]
+                            md:hidden
+                        "
+                    >
+                        <div
+                            className="
+                                rounded-3xl
+                                border
+                                border-gray-200/70
+                                dark:border-white/10
+                                bg-white/95
+                                dark:bg-[#0B1F3A]
+                                backdrop-blur-xl
+                                shadow-2xl
+                                p-3
+                                overflow-hidden
+                            "
+                        >
+                            {navItems.map((item, index) => {
+                                const isActive =
+                                    activeSection === item.id;
+
+                                return (
+                                    <motion.a
+                                        key={item.id}
+                                        href={item.href}
+                                        onClick={closeMenu}
+                                        initial={{
+                                            opacity: 0,
+                                            x: -20,
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            x: 0,
+                                        }}
+                                        transition={{
+                                            delay: index * 0.05,
+                                        }}
+                                        whileHover={{
+                                            x: 4,
+                                        }}
+                                        whileTap={{
+                                            scale: 0.98,
+                                        }}
+                                        className={`
+                                            flex
+                                            items-center
+                                            justify-between
+                                            px-5
+                                            py-4
+                                            rounded-2xl
+                                            font-Ovo
+                                            transition-all
+                                            duration-300
+
+                                            ${
+                                                isActive
+                                                    ? `
+                                                        bg-gray-100
+                                                        dark:bg-[#162E4D]
+                                                        text-gray-900
+                                                        dark:text-[#F5C542]
+                                                    `
+                                                    : `
+                                                        text-gray-600
+                                                        dark:text-white/70
+                                                        hover:bg-gray-50
+                                                        dark:hover:bg-[#122B4A]
+                                                        hover:text-gray-900
+                                                        dark:hover:text-white
+                                                    `
+                                            }
+                                        `}
+                                    >
+                                        <span>
+                                            {item.name}
+                                        </span>
+
+                                        <span
+                                            className={`
+                                                text-lg
+                                                transition-transform
+                                                duration-300
+                                                ${
+                                                    isActive
+                                                        ? "translate-x-1"
+                                                        : ""
+                                                }
+                                            `}
+                                        >
+                                            →
+                                        </span>
+                                    </motion.a>
+                                );
+                            })}
+
+                            {/* Mobile CTA */}
+                            <motion.a
+                                href="#contact"
+                                onClick={closeMenu}
+                                whileHover={{
+                                    y: -2,
+                                }}
+                                whileTap={{
+                                    scale: 0.97,
+                                }}
+                                className="
+                                    mt-2
+                                    flex
+                                    items-center
+                                    justify-center
+                                    gap-2
+                                    px-5
+                                    py-3
+                                    rounded-2xl
+                                    bg-[#F5C542]
+                                    hover:bg-[#FFD95A]
+                                    text-[#0B1F3A]
+                                    font-semibold
+                                    shadow-md
+                                    shadow-[#F5C542]/20
+                                    transition-colors
+                                    duration-300
+                                "
+                            >
+                                Let's Work Together
+
+                                <motion.span
+                                    animate={{
+                                        x: [0, 3, 0],
+                                    }}
+                                    transition={{
+                                        duration: 1.5,
+                                        repeat: Infinity,
+                                        repeatDelay: 2,
+                                    }}
+                                >
+                                    →
+                                </motion.span>
+                            </motion.a>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
-    )
+    );
 }

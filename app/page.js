@@ -7,6 +7,7 @@ import Work from "@/components/Work";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CallButton from "@/components/CallButton";
 
 export default function Page() {
     return (
@@ -20,6 +21,8 @@ export default function Page() {
             <Contact />
             <Footer />
             <WhatsAppButton/>
+            <CallButton />
+
         </>
     )
 };

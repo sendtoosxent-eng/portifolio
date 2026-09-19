@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect } from "react";
 import Lenis from "lenis";
 
@@ -13,14 +14,17 @@ export default function LenisScroll() {
             },
         });
 
+        let animationFrame;
+
         const raf = (time) => {
             lenis.raf(time);
-            requestAnimationFrame(raf);
+            animationFrame = requestAnimationFrame(raf);
         };
 
-        requestAnimationFrame(raf);
+        animationFrame = requestAnimationFrame(raf);
 
         return () => {
+            cancelAnimationFrame(animationFrame);
             lenis.destroy();
         };
     }, []);
