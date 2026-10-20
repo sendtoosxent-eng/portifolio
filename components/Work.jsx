@@ -54,6 +54,46 @@ export default function Work() {
             link: "https://aureusafrica.online",
             linkText: "Visit Website",
         },
+        {
+            name: "Ambassadors of Jesus Christ Church",
+            icon: "/assets/work-1.png",
+            description: "Church & Member Portal",
+            details:
+                "A church platform for worship, discipleship, ministries, sermons, events and live services.",
+            technologies: ["Next.js", "React", "Responsive Web", "Vercel"],
+            link: "https://ambassadors-dun.vercel.app/",
+            linkText: "View Live Project",
+        },
+        {
+            name: "Ripple",
+            icon: "/assets/work-2.png",
+            description: "Messaging Application",
+            details:
+                "A clean, mobile-first messaging app with voice notes, photos, groups and dark mode.",
+            technologies: ["React", "JavaScript", "Responsive Web", "Vercel"],
+            link: "https://ripple-chat-six.vercel.app/",
+            linkText: "View Live Project",
+        },
+        {
+            name: "Galaxy Procurement",
+            icon: "/assets/work-3.png",
+            description: "Requisition Management Workspace",
+            details:
+                "A procurement workspace for managing requisitions and approval workflows for Galaxy International School.",
+            technologies: ["Web App", "JavaScript", "Responsive Web", "Vercel"],
+            link: "https://requiste-galaxy.vercel.app/",
+            linkText: "View Live Project",
+        },
+        {
+            name: "Kiwanuka Sec Secondary School",
+            icon: "/assets/work-4.png",
+            description: "School Website",
+            details:
+                "A school website presenting Kiwanuka Secondary School and its information for prospective students and families.",
+            technologies: ["Web Development", "JavaScript", "Responsive Web", "Vercel"],
+            link: "https://school-website-three-azure.vercel.app/",
+            linkText: "View Live Project",
+        },
     ];
 
     return (
