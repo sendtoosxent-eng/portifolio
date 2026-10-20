@@ -8,6 +8,7 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import CallButton from "@/components/CallButton";
+import Adellah from "@/components/Adellah";
 
 export default function Page() {
     return (
@@ -22,6 +23,7 @@ export default function Page() {
             <Footer />
             <WhatsAppButton/>
             <CallButton />
+            <Adellah />
 
         </>
     )
